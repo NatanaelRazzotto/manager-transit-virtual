@@ -28,7 +28,7 @@ const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
     console.log('📡 Registrando comandos...');
 
     await rest.put(
-      Routes.applicationGuildCommands(process.env.CLIENT_ID, "1358984602424709292"), // Para testes
+      Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUID_ID), // Para testes
       // Routes.applicationCommands(CLIENT_ID), // Para uso global
       { body: commands }
     );
