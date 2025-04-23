@@ -87,6 +87,40 @@ client.on(Events.InteractionCreate, async interaction => {
       });
     }
 
+    if (interaction.isChatInputCommand() && interaction.commandName === 'gerenciamento_taximetro') {
+
+      const tempoInicialStr = interaction.options.getString('tempo_inicial');
+      const tempoFinalStr = interaction.options.getString('tempo_final');
+    
+      function converterHorarioParaMinutos(horario) {
+        const [horas, minutos] = horario.split(':').map(Number);
+        return horas * 60 + minutos;
+      }
+    
+      // Converte os horários
+      const inicioMin = converterHorarioParaMinutos(tempoInicialStr);
+      const fimMin = converterHorarioParaMinutos(tempoFinalStr);
+    
+      const tempoConsumido = fimMin - inicioMin;
+    
+      if (tempoConsumido <= 0) {
+        return await interaction.reply({
+          content: '❌ O horário final deve ser maior que o inicial.',
+          ephemeral: true
+        });
+      }
+    
+      // Cada 2 minutos = R$7,00
+      const blocosDeDoisMinutos = Math.ceil(tempoConsumido / 2);
+      const valorFinal = blocosDeDoisMinutos * 7;
+      const valorFinalMotorista = blocosDeDoisMinutos * 5;
+    
+      await interaction.reply({
+        content: `🧮 CALCULO DO TAXÍMETRO: \n🧮 Valor base: $7,00 para cada 2 minutos \n🕒 Início: ${tempoInicialStr}\n🕔 Fim: ${tempoFinalStr}\n⏱ Tempo consumido: ${tempoConsumido} minutos\n💵 Valor final: R$ ${valorFinal.toFixed(2)} \n💵 Valor p/ Motorista: R$ ${valorFinalMotorista.toFixed(2)}`
+      });
+    }
+    
+
     if (interaction.isButton() && interaction.customId === 'bater_ponto') {
       const select = new StringSelectMenuBuilder()
         .setCustomId('selecionar_trecho')
