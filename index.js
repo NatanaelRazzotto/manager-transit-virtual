@@ -148,12 +148,53 @@ client.on(Events.InteractionCreate, async interaction => {
       );
 
       await interaction.update({
-        content: `✅ Tabela aberta!\n**🗒LINHA: ** ${ponto.projeto}\n**🚍VEÍCULO: ** ${produto}\n**Horário de partida:** ${horarioEntrada}\nClique no botão abaixo para fechar.`,
+        content: `✅ Tabela aberta!\n👤 Motorista: ${interaction.user.username}\n**🗒LINHA: ** ${ponto.projeto}\n**🚍VEÍCULO: ** ${produto}\n**Horário de partida:** ${horarioEntrada}\nClique no botão abaixo para fechar.`,
         components: [row]
       });
     }
 
     if (interaction.isButton() && interaction.customId === 'fechar_ponto') {
+      const ponto = pontosAbertos.get(interaction.user.id);
+
+       // Verifica se é o dono ou se é administrador
+       const member = await interaction.guild.members.fetch(interaction.user.id);
+        const isAdmin = member.permissions.has('Administrator');
+      // Se não achou e o usuário é admin, busca um ponto de outro usuário
+      if (!ponto && isAdmin) {
+        for (const [userId, p] of pontosAbertos.entries()) {
+          if (p.ownerId) {
+            ponto = p;
+            ponto.ownerId = userId; // Garante que a gente sabe quem é o dono
+            break; // Pega o primeiro ponto aberto (você pode melhorar essa lógica se quiser escolher)
+          }
+        }
+      }
+
+      // Se mesmo assim não achou, responde com erro
+      if (!ponto) {
+        return await interaction.reply({
+          content: '❌ Nenhum ponto encontrado para fechar.',
+          ephemeral: true
+        });
+      }
+
+      // Agora checa se é o dono ou admin
+      if (interaction.user.id !== ponto.ownerId && !isAdmin) {
+        return await interaction.reply({
+          content: '❌ Você não tem permissão para fechar este ponto.',
+          ephemeral: true
+        });
+      }
+
+      // Verifica se o ponto existe
+      if (!ponto) {
+        return await interaction.reply({
+          content: '❌ Você não tem um ponto aberto para fechar.',
+          ephemeral: true
+        });
+      }   
+        
+      
       const projeto = pontosAbertos.get(interaction.user.id).projeto;
 
       const modal = new ModalBuilder()
